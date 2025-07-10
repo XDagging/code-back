@@ -1,0 +1,25 @@
+{
+  "name": "code-back",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx tsx frontRender.mts"
+  },
+  "dependencies": {
+    "@langchain/community": "latest",
+    "@langchain/core": "latest",
+    "@langchain/langgraph": "^0.3.7",
+    "@langchain/langgraph-supervisor": "^0.0.15",
+    "@langchain/openai": "latest",
+    "dotenv": "latest",
+    "puppeteer": "^24.12.0",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10"
+  }
+}
