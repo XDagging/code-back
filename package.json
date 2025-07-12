@@ -7,16 +7,21 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "dev": "npx tsx frontRender.mts"
+    "dev": "npx tsx tools/assetInstaller.mts"
   },
   "dependencies": {
     "@langchain/community": "latest",
     "@langchain/core": "latest",
+    "@langchain/google-genai": "^0.2.14",
     "@langchain/langgraph": "^0.3.7",
     "@langchain/langgraph-supervisor": "^0.0.15",
     "@langchain/openai": "latest",
     "dotenv": "latest",
+    "isolated-vm": "^5.0.4",
+    "pdf-parse": "^1.1.1",
     "puppeteer": "^24.12.0",
+    "tesseract.js": "latest",
+    "uuid": "^11.1.0",
     "zod": "latest"
   },
   "devDependencies": {

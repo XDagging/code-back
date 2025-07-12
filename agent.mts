@@ -1,8 +1,9 @@
 import 'dotenv/config'
-import renderTool from "./frontRender.mts"
+import renderTool from "./tools/frontRender.mts"
 import fs from "fs"
 // import requestTool from "./request.mts"; // Your tool
-import { ChatOpenAI } from "@langchain/openai";
+// import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI,  } from "@langchain/google-genai";
 // import { StateGraph } from "@langchain/langgraph";
 // import { BaseMessage } from "@langchain/core/messages";
 // import { Annotation } from "@langchain/langgraph";
@@ -21,10 +22,11 @@ const agentTools = [renderTool];
 
 
 // Switch to gemini 2.5 pro 
-const llm = new ChatOpenAI({ 
+const llm = new ChatGoogleGenerativeAI({ 
     temperature: 0, 
-    model: "gpt-4o-mini"
+    model: "gemini-1.5-flash"
 });
+
 
 
 
@@ -52,21 +54,37 @@ const agentNavigate = createReactAgent({
 
 
 const agentType = createReactAgent({
-    llm,
-    tools: agentTools,
-    name: "agentType",
+  llm,
+  tools: [renderTool],
+  
+  name: "agentType",
+  checkpointSaver: agentCheckpointer,
+  prompt: `
+You are searching restaurant websites to determine what kind of menu they use.
 
-    checkpointSaver: agentCheckpointer,
-    prompt: `
-    You are searching restaurant websites. 
-    Your goal is to find the menu on the website and which type of menu it is. 
-    Menu types can either be pdf, webapp, or img (image). 
+Your task is to classify the menu format based on the **text content and image** of the rendered page.
 
-    Do skeleton with selection type none to get the full page. 
-    Return either pdf, webapp, img, or unsure
-    
-    If you are unsure, say 'unsure'.  `
+There are only 4 valid outputs:
+- 'webapp' — if the menu is rendered directly as text or buttons on the website
+- 'pdf' — if the menu is shown via a downloadable or embedded PDF
+- 'img' — if the menu is shown entirely as an image or scanned photo
+- 'unsure' — if you cannot determine the menu type
+
+---
+
+🔍 How to decide:
+
+- If you see readable food item names, categories, and prices in the text: return 'webapp'
+- If the menu is shown as a .pdf or has "Download Menu" buttons: return 'pdf'
+- If the image looks like a scanned or flat menu photo with no readable text: return 'img'
+- If nothing is clearly detectable or it's ambiguous: return 'unsure'
+
+Only return **one word**: webapp, pdf, img, or unsure.
+
+Do not explain, justify, or output anything else.
+`
 });
+
 
 
 
@@ -86,6 +104,8 @@ const agentGetLinks = createReactAgent({
 Your task is to extract all internal links from the provided webpage that may lead to individual menu items or customization options (e.g., toppings, sizes, sides).
 
 If the full menu is already shown on the given URL, return only that URL in a list.
+
+You will be provided an image of the current state of the webpage to help guide you.
 
 Otherwise:
 
@@ -111,6 +131,7 @@ You are a data analyst responsible for extracting every possible menu item and i
 
 Each page in the list may display menu data differently. Your job is to visit **every single link** provided — do not skip or ignore any. Process them **all in a single request** using the input list.
 
+You will be provided an image of the current state of the webpage to help guide you.
 ---
 
 You will be given a list of URLs (e.g., 10-20 links). You must pass **all of them at once** into the tool, using the \`url\` parameter as an array.
@@ -171,7 +192,7 @@ Return the most complete list of menu combinations possible using the given page
 
 // Could switch to gemini to give more context
 const workflow = createSupervisor({
-    agents: [agentGetLinks, agentScrapeWeb,agentType],
+    agents: [agentGetLinks, agentScrapeWeb, agentType],
     llm: llm,
     outputMode: "full_history",
     prompt: `
@@ -269,7 +290,7 @@ class LiveLogger extends BaseCallbackHandler {
 
 
 const result = await app.invoke({
-    messages: [
+    messages: [ 
         new HumanMessage("find me every menu combination for this restaurant: https://stksteakhouse.olo.com/menu/stk-downtown/")
     ],
     
